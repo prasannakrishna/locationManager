@@ -1,0 +1,13 @@
+get the pincodes pdf and run pdf to csvmongo py to get file ready to import on mongo
+
+
+here the thing is this
+
+there will be demand clusters
+and supply clusters
+
+allocatiuon engine look for store, site and seller division to fullfill demand of the community
+
+here we take each community orders - and try to allocate fully
+in which order we should take community -
+again depending on order quantities -

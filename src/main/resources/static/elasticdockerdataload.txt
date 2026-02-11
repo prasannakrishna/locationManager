@@ -1,0 +1,8 @@
+python3 -m venv myenv
+source myenv/bin/activate
+pip install elasticsearch
+
+docker exec -it 36738f484010 /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic
+
+permission issue
+docker exec -u root 36738f484010 chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/config/
