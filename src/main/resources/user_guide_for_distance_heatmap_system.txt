@@ -1,0 +1,107 @@
+How to Use
+
+  Step 1: Seed Centroids
+
+  Register lat/lng for major clusters:
+
+  # Single
+  POST /distance/centroids
+  {
+    "clusterName": "560", "state": "Karnataka", "zone": "Bangalore Urban",
+    "city": "Bangalore", "latitude": 12.9716, "longitude": 77.5946, "pincodeCount": 100
+  }
+
+  # Batch — register many at once
+  POST /distance/centroids/batch
+  [
+    { "clusterName": "560", "city": "Bangalore", "state": "Karnataka", "latitude": 12.9716, "longitude": 77.5946 },
+    { "clusterName": "600", "city": "Chennai", "state": "Tamil Nadu", "latitude": 13.0827, "longitude": 80.2707 },
+    { "clusterName": "400", "city": "Mumbai", "state": "Maharashtra", "latitude": 19.0760, "longitude": 72.8777 },
+    { "clusterName": "110", "city": "New Delhi", "state": "Delhi", "latitude": 28.6139, "longitude": 77.2090 },
+    ...
+  ]
+
+  Step 2: Precompute Distances
+
+  POST /distance/precompute
+  → { "totalCentroids": 100, "distancesComputed": 4950 }
+
+  Step 3: Query
+
+  # Distance between two clusters
+  GET /distance?from=560&to=600
+  → { "distanceKm": 290.5, "estimatedRoadKm": 377.7, "estimatedTransitHours": 7.6 }
+
+  # Clusters within 200km of Bangalore
+  GET /distance/within?cluster=560&radius=200
+  → { "count": 15, "clusters": [...] }
+
+  # 10 nearest clusters to Bangalore
+  GET /distance/nearest?cluster=560&limit=10
+
+  # Full heatmap
+  GET /distance/heatmap?cluster=560
+  → {
+      "origin": "560",
+      "tiers": {
+        "within50km": { "count": 5, "clusters": [...] },
+        "within100km": { "count": 12, "clusters": [...] },
+        "within200km": { "count": 25, "clusters": [...] },
+        "within500km": { "count": 80, "clusters": [...] },
+        "beyond500km": { "count": 920, "clusters": [...] }
+      }
+    }
+
+  # Coverage stats
+  GET /distance/stats
+  → { "totalCentroids": 100, "precomputedDistances": 4950, "coveragePercent": 100 }
+
+  What This Enables
+
+  ┌───────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+  │         Use Case          │                                          How                                           │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Delivery time estimation  │ distanceKm → estimatedTransitHours → "Arrives in 1-2 days"                             │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Shipping cost             │ estimatedRoadKm × carrier.ratePerKm                                                    │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Nearest warehouse         │ GET /distance/nearest?cluster={customerCluster}&limit=5 → pick warehouse with stock    │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Allocation routing        │ Supply cluster 560, demand cluster 600 → 290km → check if last mile carrier covers 600 │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Warehouse positioning     │ Heatmap shows which demand clusters have no supply within 200km → open warehouse there │
+  ├───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Community spread analysis │ Community spans clusters 560, 562, 570 → heatmap shows how spread out the demand is    │
+  └───────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+ # 1. Distance between two clusters
+  GET http://localhost:8089/distance?from=560&to=600
+  GET http://localhost:8089/distance?from=581&to=560
+
+  # 2. Clusters within a radius
+  GET http://localhost:8089/distance/within?cluster=560&radius=100
+  GET http://localhost:8089/distance/within?cluster=581&radius=200
+
+  # 3. Nearest N clusters
+  GET http://localhost:8089/distance/nearest?cluster=560&limit=10
+  GET http://localhost:8089/distance/nearest?cluster=581&limit=5
+
+  # 4. Full heatmap (distance tiers)
+  GET http://localhost:8089/distance/heatmap?cluster=560
+  GET http://localhost:8089/distance/heatmap?cluster=581
+
+  # 5. Stats
+  GET http://localhost:8089/distance/stats
+
+  # 6. All centroids
+  GET http://localhost:8089/distance/centroids
+
+  # 7. Existing cluster APIs
+  GET http://localhost:8089/clusters/pincode/560001
+  GET http://localhost:8089/clusters/state/Karnataka
+  GET http://localhost:8089/clusters/states
+  GET http://localhost:8089/clusters/zones
+
+  Try in Postman — start with:
+  GET http://localhost:8089/distance?from=581&to=560
+  This gives you Sirsi → Bangalore distance with transit time.

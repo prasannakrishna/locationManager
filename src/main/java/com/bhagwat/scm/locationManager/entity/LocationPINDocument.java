@@ -1,7 +1,5 @@
 package com.bhagwat.scm.locationManager.entity;
 
-import org.springframework.data.elasticsearch.annotations.Document;
-
-@Document()
+// Placeholder for future Elasticsearch integration — not yet implemented
 public class LocationPINDocument {
 }
